@@ -11,6 +11,7 @@ from flask import Flask, jsonify, render_template, request, send_from_directory
 
 from demo import generate_site
 from extractor import consume, extract_links, fetch_html, produce
+from advanced import run_advanced
 
 
 ROOT = Path(__file__).resolve().parent
@@ -32,6 +33,8 @@ class DemoRun:
             "producer": "Ready to fetch", "consumer": "Waiting for pages",
             "producer_done": False, "consumer_done": False,
             "producer_log": [], "consumer_log": [], "results": [], "elapsed": 0,
+            "mode": "basic", "capacity": 100, "dropped": [], "intervention": None,
+            "fetch_workers": {}, "consumers": {}, "consumer_count": 1,
         }
         self.started = None
 
@@ -48,11 +51,13 @@ class DemoRun:
                 result["elapsed"] = round(time.monotonic() - self.started, 1)
             return result
 
-    def start(self, base_url):
+    def start(self, base_url, mode="basic"):
         with self.lock:
             if self.data["status"] == "running":
                 return False
             self.reset()
+            self.data["mode"] = mode
+            self.data["capacity"] = 10 if mode == "advanced" else 100
             self.started = time.monotonic()
             self.data["status"] = "running"
             Thread(target=self.run, args=(base_url,), name="demo-run", daemon=True).start()
@@ -62,6 +67,11 @@ class DemoRun:
         try:
             generate_site(SITE, count=100)
             urls = [f"{base_url}/pages/match-{index:03}.html" for index in range(1, 101)]
+            if self.data["mode"] == "advanced":
+                run_advanced(self, urls)
+                with self.lock:
+                    self.data["status"] = "finished"
+                return
             pages = DisplayQueue(self)
             results = DisplayResults(self)
 
@@ -198,7 +208,11 @@ def state():
 def start():
     # Use the listening port, not user-supplied URLs or the Host header.
     port = request.environ["SERVER_PORT"]
-    if not demo_run.start(f"http://127.0.0.1:{port}"):
+    body = request.get_json(silent=True) or {}
+    mode = body.get("mode", "basic") if isinstance(body, dict) else None
+    if mode not in {"basic", "advanced"}:
+        return jsonify(error="Mode must be basic or advanced"), 400
+    if not demo_run.start(f"http://127.0.0.1:{port}", mode):
         return jsonify(error="A demonstration is already running"), 409
     return jsonify(started=True), 202
 

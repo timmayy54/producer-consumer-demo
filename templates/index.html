@@ -9,36 +9,42 @@
 <body>
 <main>
   <header><div><div class="eyebrow">LOCAL LAB / WEB LINK EXTRACTOR</div><h1>Watch the pipeline work.</h1>
-    <p>100 football pages. One producer. One queue. One consumer.</p></div>
-    <button id="start">Start demonstration</button></header>
-  <div class="runbar"><span id="status" role="status">Ready</span><span id="elapsed">0.0s elapsed</span><span>Target pace: 5 fetched/s · 4 parsed/s</span></div>
+    <p>100 football pages. Watch acquisition, queueing and processing.</p></div>
+    <div class="buttons"><button id="start">Basic demonstration</button><button id="advanced">Advanced demonstration</button></div></header>
+  <div class="runbar"><span id="status" role="status">Ready</span><span id="elapsed">0.0s elapsed</span><span id="pace">Basic: 5 fetched/s · 4 parsed/s</span></div>
+  <div id="intervention" class="intervention" role="status" hidden></div>
   <section class="pipeline" aria-label="Live pipeline">
-    <article class="worker" id="producer-card"><div class="cardhead"><span class="eyebrow">PRODUCER</span><span class="rate">5 / sec</span></div>
+    <article class="worker" id="producer-card"><div class="cardhead"><span class="eyebrow">PRODUCER</span><span class="rate" id="producer-rate">5 / sec</span></div>
       <div class="metric"><strong id="produced">0</strong><span>/ 100 queued</span></div>
       <div class="activity"><span class="spinner"></span><span id="producer-activity">Ready to fetch</span></div>
+      <div id="fetch-workers" class="worker-list"></div>
       <progress id="producer-progress" max="100" value="0" aria-label="Producer progress"></progress>
       <div class="console" id="producer-log" aria-label="Producer activity log"><div>Waiting to start…</div></div>
     </article>
-    <article class="queue"><div class="cardhead"><span class="eyebrow">FIFO QUEUE</span><span class="rate">100 capacity</span></div>
+    <article class="queue"><div class="cardhead"><span class="eyebrow">FIFO QUEUE</span><span class="rate" id="capacity">100 capacity</span></div>
       <div class="metric"><strong id="depth">0</strong><span>pages waiting</span></div>
       <p class="queue-caption">Oldest at the front. New pages join the back.</p>
       <div class="queue-labels"><span>FRONT / OUT</span><span>BACK / IN</span></div>
       <div id="queue-slots" aria-label="Queued pages"></div>
-      <div class="queue-bottom"><span id="peak">Peak: 0</span><span>Backpressure enabled</span></div>
-      <p class="note">The producer is faster, so the queue grows. After fetching finishes, the consumer drains it.</p>
+      <div class="queue-bottom"><span id="peak">Peak: 0</span><span id="policy">Backpressure enabled</span></div>
+      <p class="note" id="queue-note">The producer is faster, so the queue grows. After fetching finishes, the consumer drains it.</p>
+      <div id="drop-summary" class="drop-summary" hidden></div>
     </article>
-    <article class="worker" id="consumer-card"><div class="cardhead"><span class="eyebrow">CONSUMER</span><span class="rate">4 / sec</span></div>
+    <article class="worker" id="consumer-card"><div class="cardhead"><span class="eyebrow">CONSUMERS</span><span class="rate" id="consumer-rate">4 / sec</span></div>
       <div class="metric"><strong id="completed">0</strong><span>/ 100 processed</span></div>
       <div class="activity"><span class="spinner"></span><span id="consumer-activity">Waiting for pages</span></div>
+      <div id="consumer-workers" class="worker-list"></div>
       <progress id="consumer-progress" max="100" value="0" aria-label="Consumer progress"></progress>
       <div class="console" id="consumer-log" aria-label="Consumer activity log"><div>Waiting to start…</div></div>
     </article>
   </section>
   <section class="output"><div class="output-head"><div><div class="eyebrow">OUTPUT</div><h2>Processed matches</h2></div>
-    <div class="totals"><span><strong id="link-count">0</strong> links extracted</span><span><strong id="error-count">0</strong> errors</span></div></div>
+    <div class="totals"><span><strong id="link-count">0</strong> links extracted</span><span><strong id="error-count">0</strong> errors</span><span><strong id="drop-count">0</strong> dropped</span></div></div>
+    <p id="accounting" class="note"></p>
     <div id="empty">Completed pages will appear here as the consumer extracts their hyperlinks.</div>
     <div id="results"></div>
   </section>
+  <details id="drop-panel" hidden><summary>Dropped pages — oldest pending entries</summary><div id="dropped-pages"></div></details>
   <footer>Real local HTTP requests · In-memory queue · Link extraction, not odds parsing · Refreshing this page does not restart a run</footer>
 </main>
 </body></html>

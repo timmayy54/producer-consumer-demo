@@ -22,12 +22,12 @@ Then start it:
 .\.venv\Scripts\python.exe app.py
 ```
 
-Open http://127.0.0.1:5000 and click **Start demonstration**. Flask serves both the
+Open http://127.0.0.1:5000 and choose **Basic demonstration** or **Advanced demonstration**. Flask serves both the
 dashboard and the generated HTML pages in one threaded process. No separate page
 server is needed. Stop with Ctrl+C. This is a local development demo, bound to
 loopback, not a production deployment.
 
-The producer fetches real local HTTP pages at up to 5 per second; the consumer
+In the basic demo, the producer fetches real local HTTP pages at up to 5 per second; the consumer
 parses at up to 4 per second. Delay wrappers include the actual fetch/parse time.
 Expect about 25 seconds, with roughly 20 pages waiting near the end of production,
 then the queue drains. Real timings depend on the machine. Errors can change pacing.
@@ -36,13 +36,46 @@ The UI shows actual queue insertions/removals, worker activity, completed result
 link/error counts and peak queue depth. It polls state every 200 ms, so it samples
 activity rather than displaying every transition. The completion marker is excluded
 from the displayed page count. Refreshing does not restart a run; concurrent start
-requests are rejected. After completion, **Run again** starts a fresh batch.
+requests are rejected. After completion, either demonstration button starts a fresh batch.
 
 `extractor.py` is unchanged. `app.py` calls its existing `produce` and `consume`
 functions, injects paced fetch/parse functions, and observes queue storage hooks
 and result appends using small subclasses. A separate lock protects UI state.
 Match titles in result cards are demo metadata; hyperlinks are the extractor output.
 The standard CLI remains unpaced and does not require Flask.
+
+### Advanced demonstration
+
+`advanced.py` provides separate orchestration while reusing the original fetcher,
+HTML parser, consumer and Page record. Four fetch workers each take at least 0.4
+seconds per fetch (up to 10 pages/second combined). Initially one consumer takes
+at least 0.5 seconds per parse (2/second).
+
+The queue holds at most **10 pending pages**. An arrival when ten pages already
+wait atomically evicts the oldest pending page and inserts the new one. Producers
+do not wait for capacity. In-progress pages are never evicted. On exactly the fifth
+drop, the demo automatically simulates a DevOps intervention and starts Consumer 2.
+This is a scripted teaching scenario, not an actual person or general autoscaler.
+Both consumers share the same queue, and trimming remains enabled.
+
+Two consumers can process approximately four pages/second, still slower than the
+producer. Expect continued dropping while fetching, then the queue drains at the
+end. Run duration is approximately 13–14 seconds; counts depend on scheduling.
+The UI shows each fetcher/consumer, the intervention time, dropped filenames and
+accounting: processed + dropped = 100 at completion. Errors are included within
+processed results, never counted as successful link extraction. These static demo
+pages are not actually stale: dropping is a deliberate completeness tradeoff.
+
+All fetch jobs finish before one completion marker per started consumer is added.
+Markers use reserved control space and never evict pages; no new pages may be
+enqueued after shutdown starts. Completion order need not match input order.
+The pool has at most four active jobs; its 100 submitted tasks are suitable for
+this finite demo, not a bounded submission scheme for an infinite input stream.
+
+Run `.\.venv\Scripts\python.exe -m unittest -v` for all tests. Advanced tests cover
+oldest eviction, exact fifth-drop scale-out, overlapping fetches, no duplicate/lost
+accounting, error isolation and shutdown markers. They are skipped if optional
+Flask dependencies are absent; the original CLI tests still run independently.
 
 ## Run
 
@@ -117,16 +150,13 @@ fallback and replacement for invalid byte sequences.
 
 ## Scope and tradeoffs
 
-- Producer and consumer overlap, but URL fetches are sequential. A fixed fetcher
-  pool is a possible extension, with completion signalled only after all fetchers finish.
-- The queue limits pending page count and applies backpressure. **Oldest-entry
-  trimming is not implemented.** That alternative would discard pending work and
-  should explicitly report which inputs were dropped.
+- The CLI/basic demo fetch sequentially and apply backpressure. The advanced demo
+  implements concurrent fetching and oldest-entry trimming with explicit dropped results.
 - Input URLs and extracted results remain in memory. This is a finite-batch demo,
   not a fully streaming or durable system. There is no queue persistence, automatic
   acknowledgement, retry, dead-letter handling or recovery after process failure.
-- Adding consumers requires a completion marker per consumer and a decision about
-  output ordering. More parsing threads do not guarantee greater CPU throughput.
+- The advanced demo adds a second consumer with its own completion marker. More
+  parsing threads do not guarantee greater CPU throughput; these delays model work.
 - No crawling, browser automation, odds validation, scheduling or external broker.
 - Tests use local HTTP and injected failures, not external website availability.
   They cover parsing, concurrent progress, shutdown, error isolation, queue capacity,
