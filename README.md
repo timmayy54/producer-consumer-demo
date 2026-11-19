@@ -2,7 +2,47 @@
 
 A small Python command-line program: one producer fetches HTML, a bounded
 in-memory queue passes pages to one concurrent consumer, and the consumer extracts
-hyperlinks. Python 3.10+; no third-party dependencies. Tested on Python 3.12.
+hyperlinks. The CLI uses Python 3.10+ with no third-party dependencies. An optional
+Flask dashboard visualises the same workers. CLI tested on Python 3.12 and 3.13;
+dashboard tested on Python 3.13.
+
+## Visual demo: one process, one command
+
+On Windows, set up the optional UI once:
+
+```powershell
+cd C:\code\producer-consumer-demo
+py -3.13 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements-ui.txt
+```
+
+Then start it:
+
+```powershell
+.\.venv\Scripts\python.exe app.py
+```
+
+Open http://127.0.0.1:5000 and click **Start demonstration**. Flask serves both the
+dashboard and the generated HTML pages in one threaded process. No separate page
+server is needed. Stop with Ctrl+C. This is a local development demo, bound to
+loopback, not a production deployment.
+
+The producer fetches real local HTTP pages at up to 5 per second; the consumer
+parses at up to 4 per second. Delay wrappers include the actual fetch/parse time.
+Expect about 25 seconds, with roughly 20 pages waiting near the end of production,
+then the queue drains. Real timings depend on the machine. Errors can change pacing.
+
+The UI shows actual queue insertions/removals, worker activity, completed results,
+link/error counts and peak queue depth. It polls state every 200 ms, so it samples
+activity rather than displaying every transition. The completion marker is excluded
+from the displayed page count. Refreshing does not restart a run; concurrent start
+requests are rejected. After completion, **Run again** starts a fresh batch.
+
+`extractor.py` is unchanged. `app.py` calls its existing `produce` and `consume`
+functions, injects paced fetch/parse functions, and observes queue storage hooks
+and result appends using small subclasses. A separate lock protects UI state.
+Match titles in result cards are demo metadata; hyperlinks are the extractor output.
+The standard CLI remains unpaced and does not require Flask.
 
 ## Run
 
