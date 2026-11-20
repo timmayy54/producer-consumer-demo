@@ -30,9 +30,9 @@ function render(state) {
   const running = state.status === 'running';
   for (const id of ['start', 'advanced']) element(id).disabled = running || requestingStart;
   const advanced = state.mode === 'advanced';
-  element('pace').textContent = advanced ? 'Advanced: 4 fetchers × 2.5/s · each consumer 2/s' : 'Basic: 5 fetched/s · 4 parsed/s';
-  element('producer-rate').textContent = advanced ? '4 × 2.5 / sec' : '5 / sec';
-  element('consumer-rate').textContent = advanced ? `${state.consumer_count} × 2 / sec` : '4 / sec';
+  element('pace').textContent = advanced ? 'Advanced: 4 fetchers × 1/s · each consumer 2.5/s' : 'Basic: 5 fetched/s · 4 parsed/s';
+  element('producer-rate').textContent = advanced ? '4 × 1 / sec' : '5 / sec';
+  element('consumer-rate').textContent = advanced ? `${state.consumer_count} × 2.5 / sec` : '4 / sec';
   element('capacity').textContent = `${state.capacity} capacity`;
   element('policy').textContent = advanced ? 'Drop oldest · no backpressure' : 'Backpressure enabled';
   element('queue-note').textContent = advanced ? 'At capacity, each arrival replaces the oldest waiting page. After five drops, a simulated DevOps intervention starts Consumer 2. Trimming stays active.' : 'The producer is faster, so the queue grows. After fetching finishes, the consumer drains it.';

@@ -47,9 +47,9 @@ The standard CLI remains unpaced and does not require Flask.
 ### Advanced demonstration
 
 `advanced.py` provides separate orchestration while reusing the original fetcher,
-HTML parser, consumer and Page record. Four fetch workers each take at least 0.4
-seconds per fetch (up to 10 pages/second combined). Initially one consumer takes
-at least 0.5 seconds per parse (2/second).
+HTML parser, consumer and Page record. Four fetch workers each take at least 1
+second per fetch (up to 4 pages/second combined). Initially one consumer takes
+at least 0.4 seconds per parse (2.5/second).
 
 The queue holds at most **10 pending pages**. An arrival when ten pages already
 wait atomically evicts the oldest pending page and inserts the new one. Producers
@@ -58,9 +58,10 @@ drop, the demo automatically simulates a DevOps intervention and starts Consumer
 This is a scripted teaching scenario, not an actual person or general autoscaler.
 Both consumers share the same queue, and trimming remains enabled.
 
-Two consumers can process approximately four pages/second, still slower than the
-producer. Expect continued dropping while fetching, then the queue drains at the
-end. Run duration is approximately 13–14 seconds; counts depend on scheduling.
+Two consumers can process approximately five pages/second, faster than the four
+fetchers' combined four pages/second. After scale-out, the backlog should shrink
+while fetching continues. Bursty arrivals can still cause transient drops near
+capacity. Run duration is approximately 26–28 seconds; counts depend on scheduling.
 The UI shows each fetcher/consumer, the intervention time, dropped filenames and
 accounting: processed + dropped = 100 at completion. Errors are included within
 processed results, never counted as successful link extraction. These static demo

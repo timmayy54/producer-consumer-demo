@@ -109,7 +109,7 @@ class AdvancedResults(list):
 
 
 def run_advanced(run, urls, fetch=fetch_html, parse=extract_links,
-                 fetch_interval=0.4, parse_interval=0.5):
+                 fetch_interval=1.0, parse_interval=0.4):
     """Four fetch threads; add consumer 2 exactly when the fifth page is evicted."""
     consumers = []
 

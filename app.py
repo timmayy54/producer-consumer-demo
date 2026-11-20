@@ -1,6 +1,7 @@
 """Local visual demo. Run with .venv/Scripts/python app.py."""
 
 import copy
+import logging
 import re
 import time
 from pathlib import Path
@@ -218,5 +219,7 @@ def start():
 
 
 if __name__ == "__main__":
+    # Hide routine HTTP access logs while retaining warnings and errors.
+    logging.getLogger("werkzeug").setLevel(logging.WARNING)
     # Threaded HTTP serving lets the producer fetch pages while the UI polls state.
     app.run(host="127.0.0.1", port=5000, threaded=True, debug=False, use_reloader=False)
