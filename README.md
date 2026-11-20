@@ -1,5 +1,11 @@
 # Producer/consumer web link extractor
 
+[![Watch the 79-second Python producer/consumer demo](docs/video-thumbnail.jpg)](https://www.youtube.com/watch?v=RcMPKJ6Shp8)
+
+**[Watch the 79-second demo on YouTube](https://www.youtube.com/watch?v=RcMPKJ6Shp8)** —
+see concurrent fetching, oldest-entry trimming and a second consumer draining the queue.
+The video description includes the full original task brief.
+
 A small Python command-line program: one producer fetches HTML, a bounded
 in-memory queue passes pages to one concurrent consumer, and the consumer extracts
 hyperlinks. The CLI uses Python 3.10+ with no third-party dependencies. An optional
