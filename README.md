@@ -10,19 +10,28 @@ For diagrams and a complete explanation of both modes, see [the code walkthrough
 
 ## Visual demo: one process, one command
 
-On Windows, set up the optional UI once:
+On Windows, install Git and Python 3.13 first. Then clone the repository and set
+up the optional UI in PowerShell:
 
 ```powershell
-cd C:\code\producer-consumer-demo
+git clone https://github.com/timmayy54/producer-consumer-demo.git
+cd producer-consumer-demo
 py -3.13 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements-ui.txt
 ```
 
-Then start it:
+The `.venv` directory is created locally and excluded from Git. Each person creates
+their own environment; it is not supplied by cloning the repository. Setup is only
+needed once per checkout, unless the environment or dependencies change.
+
+From the repository directory, start the app with:
 
 ```powershell
 .\.venv\Scripts\python.exe app.py
 ```
+
+This uses the virtual environment directly, so activation is optional. On subsequent
+runs, only this start command is needed.
 
 Open http://127.0.0.1:5000 and choose **Basic demonstration** or **Advanced demonstration**.
 Flask serves the dashboard and generated pages in one threaded process. Stop with
